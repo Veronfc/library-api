@@ -2,9 +2,10 @@
 
 import dotenv from "dotenv";
 import express, { Request, Response, Application } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 import { Auth } from "./auth";
+import { Query } from "./query";
 
 dotenv.config();
 
@@ -19,41 +20,17 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/users", async (req: Request, res: Response) => {
-	const users = await db.user.findMany();
-	res.send(users);
+	res.send(await Query.getUsers());
 });
 
 app.post("/register", async (req: Request, res: Response) => {
-	const name: string = req.body.name;
-	const username: string = req.body.username;
-	const password: string = await Auth.hashPassword(req.body.password);
-
-	await db.user.create({
-		data: {
-			name: name,
-			username: username,
-			password: password,
-		},
-	});
-
-	res.sendStatus(201);
+  res.sendStatus(await Query.userRegister(req))
 });
 
 app.post("/login", async (req: Request, res: Response) => {
-	const username: string = req.body.username;
-	const password: string = req.body.password;
+	const result = (await Query.userLogin(req));
 
-	const user = await db.user.findUniqueOrThrow({
-		where: {
-			username: username,
-		},
-	});
-
-	if (await Auth.checkPassword(password, user.password)) {
-		res.send(user);
-	}
-
-	res.status(401);
+	res.status(result == undefined ? 500 : result.status).send(result?.user);
 });
 
 app.listen(port, () => {

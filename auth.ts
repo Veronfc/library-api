@@ -6,18 +6,15 @@ export class Auth {
 	private static saltRounds: number = 10;
 
 	public static async hashPassword(password: string): Promise<string> {
-		return await bcrypt.hash(
-			password,
-			this.saltRounds,
-			(err: Error, hash: string) => {
-				return hash;
-			}
-		);
+		const hash: string = await bcrypt.hash(password, this.saltRounds);
+		return hash;
 	}
 
-	public static async checkPassword(password: string, hash: string): Promise<boolean> {
-		return await bcrypt.compare(password, hash, (err: Error, result: boolean) => {
-			return result;
-		});
+	public static async checkPassword(
+		password: string,
+		hash: string
+	): Promise<boolean> {
+		const result: boolean = await bcrypt.compare(password, hash);
+    return result
 	}
 }
