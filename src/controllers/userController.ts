@@ -5,17 +5,19 @@ import { Request } from "express";
 
 import { Encrypt } from "../auth/encrypt";
 
+const db = new PrismaClient();
+
 export class UserController {
-	public static async getUsers(db: PrismaClient) {
+	public static async getUsers() {
 		const users = await db.user.findMany({
 			omit: {
-				password: true
-			}
+				password: true,
+			},
 		});
 		return users;
 	}
 
-	public static async register(req: Request, db: PrismaClient) {
+	public static async register(req: Request) {
 		const name: string = req.body.name;
 		const username: string = req.body.username;
 		const password: string = await Encrypt.hashPassword(req.body.password);
@@ -23,37 +25,40 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username
-				}
+					username: username,
+				},
 			});
 
-			return 409;
+			return { content: null, status: 409 };
 		} catch (err) {
 			if (err instanceof Prisma.PrismaClientKnownRequestError) {
 				if (err.code == "P2025") {
-					await db.user.create({
+					const user = await db.user.create({
 						data: {
 							name: name,
 							username: username,
-							password: password
+							password: password,
+						},
+						omit: {
+							password: true
 						}
 					});
+
+					return { content: user, status: 201 };
 				}
 			}
 		}
-
-		return 201;
 	}
 
-	public static async login(req: Request, db: PrismaClient) {
+	public static async login(req: Request) {
 		const username: string = req.body.username;
 		const password: string = req.body.password;
 
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username
-				}
+					username: username,
+				},
 			});
 
 			if (await Encrypt.checkPassword(password, user.password)) {
@@ -71,52 +76,59 @@ export class UserController {
 		}
 	}
 
-  public static async getUser(req: Request, db: PrismaClient) {
-    const id: number = parseInt(req.params.id);
-
-    try {
-      const user = await db.user.findUniqueOrThrow({
-        where: {
-          id: id
-        },
-        omit: {
-          password: true
-        }
-      })
-
-      return { content: user, status: 200}
-    } catch (err) {
-			if (err instanceof Prisma.PrismaClientKnownRequestError) {
-				if (err.code == "P2025") {
-					return { content: null, status: 404 };
-				}
-			}
-		}
-  }
-
-	public static async getBooks(req: Request, db: PrismaClient) {
+	public static async getUser(req: Request) {
 		const id: number = parseInt(req.params.id);
 
-		try {
-			const user = await db.user.findUniqueOrThrow({
-				where: {
-					id: id
-				},
-				include: {
-					booksBorrowed: true
-				},
-				omit: {
-					password: true
-				}
-			});
+		const user = await db.user.findUniqueOrThrow({
+			where: {
+				id: id,
+			},
+			omit: {
+				password: true,
+			},
+		});
 
-			return { content: user.booksBorrowed, status: 200 };
-		} catch (err) {
-			if (err instanceof Prisma.PrismaClientKnownRequestError) {
-				if (err.code == "P2025") {
-					return { content: null, status: 404 };
-				}
-			}
-		}
+		return user;
 	}
+
+	public static async getBooks(req: Request) {
+		const id: number = parseInt(req.params.id);
+
+		const user = await db.user.findUniqueOrThrow({
+			where: {
+				id: id,
+			},
+			include: {
+				booksBorrowed: true,
+			},
+			omit: {
+				password: true,
+			},
+		});
+
+		return user.booksBorrowed;
+	}
+
+	public static async updateDetails(req: Request) {
+		const id: number = parseInt(req.params.id);
+		const name = req.body.name;
+		const username = req.body.username;
+
+		const updatedUser = await db.user.update({
+			where: {
+				id: id,
+			},
+			data: {
+				name: name,
+				username: username,
+			},
+			omit: {
+				password: true,
+			},
+		});
+
+		return updatedUser;
+	}
+
+	public static async updatePassword(req: Request) {}
 }

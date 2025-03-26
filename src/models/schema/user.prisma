@@ -4,4 +4,6 @@ model User {
   username      String    @unique
   password      String
   booksBorrowed Borrow[]
+
+  @@map("users")
 }

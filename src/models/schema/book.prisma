@@ -8,6 +8,8 @@ model Book {
   summary    String
   count      Int
   borrowedBy Borrow[]
+
+  @@map("books")
 }
 
 enum Genre {

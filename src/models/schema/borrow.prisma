@@ -6,4 +6,5 @@ model Borrow {
   borrowedOn DateTime @default(now())
 
   @@id([userId, bookId])
+  @@map("borrows")
 }
