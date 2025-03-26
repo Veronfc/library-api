@@ -113,22 +113,22 @@ export class UserController {
 		const id: number = parseInt(req.params.id);
 		const name = req.body.name;
 		const username = req.body.username;
+    const password = await Encrypt.hashPassword(req.body.password)
 
-		const updatedUser = await db.user.update({
+		await db.user.update({
 			where: {
 				id: id,
 			},
 			data: {
 				name: name,
 				username: username,
+        password: password
 			},
 			omit: {
 				password: true,
 			},
 		});
 
-		return updatedUser;
+		return 204
 	}
-
-	public static async updatePassword(req: Request) {}
 }

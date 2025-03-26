@@ -30,8 +30,8 @@ router.get("/:id/books", async (req: Request, res: Response) => {
   res.send(await UserController.getBooks(req));
 })
 
-router.post('/:id/update', async (req: Request, res: Response) => {
-  res.send(await UserController.updateDetails(req))
+router.put('/:id/update', async (req: Request, res: Response) => {
+  res.sendStatus(await UserController.updateDetails(req))
 })
 
 module.exports = router;

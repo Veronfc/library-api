@@ -6,7 +6,8 @@
     "build": "npx tsc",
     "start": "node dist/app.js",
     "dev": "nodemon app.ts",
-    "migrate": "npx prisma migrate dev --schema=./src/models/schema"
+    "migrate": "npx prisma migrate dev --schema=src/models/schema",
+    "generate": "npx prisma generate --schema=src/models/schema"
   },
   "keywords": [],
   "author": "",
