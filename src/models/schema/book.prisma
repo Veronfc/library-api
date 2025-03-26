@@ -1,0 +1,34 @@
+model Book {
+  id         Int       @id @default(autoincrement())
+  title      String    @unique
+  genre      Genre
+  author     String
+  publisher  String
+  pages      Int
+  summary    String
+  count      Int
+  borrowedBy Borrow[]
+}
+
+enum Genre {
+  Fantasy
+  Dysopian
+  Adventure
+  Mystery
+  Horror
+  Thriller
+  Romance
+  Autobiography
+  Biography
+  Historical
+  Poetry
+  Travel
+  Science_Fiction                @map("Science Fiction")
+  Historical_Fiction             @map("Historical Fiction")
+  Comtemporary_Fiction           @map("Comtemporary Fiction")
+  Food_and_Drink                 @map("Food & Drink")
+  Art_and_Photography            @map("Art & Photography")
+  True_Crime                     @map("True Crime")
+  Humanaties_and_Social_Sciences @map("Humanaties & Social Sciences")
+  Science_and_Technology         @map("Science & Technology")
+}

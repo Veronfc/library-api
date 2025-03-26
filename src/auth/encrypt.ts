@@ -2,7 +2,7 @@
 
 const bcrypt = require("bcrypt");
 
-export class Auth {
+export class Encrypt {
 	private static saltRounds: number = 10;
 
 	public static async hashPassword(password: string): Promise<string> {

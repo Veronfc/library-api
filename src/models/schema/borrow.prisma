@@ -1,0 +1,9 @@
+model Borrow {
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  bookId     Int
+  book       Book     @relation(fields: [bookId], references: [id])
+  borrowedOn DateTime @default(now())
+
+  @@id([userId, bookId])
+}
