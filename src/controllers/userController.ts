@@ -1,10 +1,11 @@
 /** @format */
 
-import { Prisma, PrismaClient } from "@prisma/client";
 import { Request } from "express";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import jwt from "jsonwebtoken";
 
 import { Encrypt } from "../auth/encrypt";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const db = new PrismaClient();
 
@@ -30,7 +31,7 @@ export class UserController {
 				}
 			});
 
-			return { content: null, status: 409 };
+			return { content: null, token: "", status: 409 };
 		} catch (err) {
 			if (err instanceof Prisma.PrismaClientKnownRequestError) {
 				if (err.code == "P2025") {
@@ -45,12 +46,21 @@ export class UserController {
 						}
 					});
 
-					return { content: user, status: 201 };
+					const secret =
+						process.env.JWT_SECRET == undefined
+							? "SomeSuperSecretKey"
+							: process.env.JWT_SECRET;
+
+					const token = jwt.sign(user, secret, {
+						expiresIn: "1m"
+					});
+
+					return { content: user, token: token, status: 201 };
 				}
 			}
 		}
 
-		return { content: null, status: 418 };
+		return { content: null, token: "", status: 418 };
 	}
 
 	public static async getUser(req: Request) {
@@ -149,18 +159,43 @@ export class UserController {
 
 			if (await Encrypt.checkPassword(password, user.password)) {
 				user.password = "";
-				return { content: user, status: 200 };
+
+				const secret =
+					process.env.JWT_SECRET == undefined
+						? "SomeSuperSecretKey"
+						: process.env.JWT_SECRET;
+
+				const token = jwt.sign(user, secret, {
+					expiresIn: "1m"
+				});
+
+				return { content: user, token: token, status: 200 };
 			}
 
-			return { content: null, status: 401 };
+			return { content: null, token: "", status: 401 };
 		} catch (err) {
 			if (err instanceof Prisma.PrismaClientKnownRequestError) {
 				if (err.code == "P2025") {
-					return { content: null, status: 404 };
+					return { content: null, token: "", status: 404 };
 				}
 			}
 		}
 
-		return { content: null, status: 418 };
+		return { content: null, token: "", status: 418 };
+	}
+
+	public static async jwtTest(req: Request) {
+		const token = req.body.token;
+		const secret =
+			process.env.JWT_SECRET == undefined
+				? "SomeSuperSecretKey"
+				: process.env.JWT_SECRET;
+
+		const decoded =
+			jwt.verify(token, secret) == undefined || null
+				? "it no work"
+				: jwt.verify(token, secret);
+
+		return decoded;
 	}
 }

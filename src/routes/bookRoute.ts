@@ -17,7 +17,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
 	const result = await BookController.getBook(req);
 
-	res.send(result.content).status(result.status);
+	res.status(result.status).send(result.content);
 });
 
 router.put("/:id", async (req: Request, res: Response) => {
