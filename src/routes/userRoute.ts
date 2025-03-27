@@ -6,32 +6,36 @@ import { UserController } from "../controllers/userController";
 
 const router = express.Router();
 
-router.get("/all", async (req: Request, res: Response) => {
-  res.send(await UserController.getUsers())
-})
+router.get("/", async (req: Request, res: Response) => {
+	res.send(await UserController.getUsers());
+});
 
-router.post("/register", async (req: Request, res: Response) => {
-  const result = await UserController.register(req);
+router.post("/", async (req: Request, res: Response) => {
+	const result = await UserController.register(req);
 
-  res.status(result == undefined ? 500 : result.status).send(result == undefined ? "No Content" : result.content);
+	res.send(result.content).status(result.status);
+});
+
+router.get("/:id", async (req: Request, res: Response) => {
+	const result = await UserController.getUser(req);
+
+	res.send(result.content).status(result.status);
+});
+
+router.put("/:id", async (req: Request, res: Response) => {
+	res.sendStatus(await UserController.update(req));
+});
+
+router.get("/:id/books", async (req: Request, res: Response) => {
+	const result = await UserController.getBooks(req);
+
+	res.send(result.content).status(result.status);
 });
 
 router.post("/login", async (req: Request, res: Response) => {
 	const result = await UserController.login(req);
 
-	res.status(result == undefined ? 500 : result.status).send(result == undefined ? "No Content" : result.content);
+	res.send(result.content).status(result.status);
 });
-
-router.get("/:id", async (req: Request, res: Response) => {
-  res.send(await UserController.getUser(req));
-})
-
-router.get("/:id/books", async (req: Request, res: Response) => {
-  res.send(await UserController.getBooks(req));
-})
-
-router.put('/:id/update', async (req: Request, res: Response) => {
-  res.sendStatus(await UserController.updateDetails(req))
-})
 
 module.exports = router;

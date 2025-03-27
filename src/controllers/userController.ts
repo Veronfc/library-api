@@ -4,6 +4,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Request } from "express";
 
 import { Encrypt } from "../auth/encrypt";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const db = new PrismaClient();
 
@@ -11,8 +12,8 @@ export class UserController {
 	public static async getUsers() {
 		const users = await db.user.findMany({
 			omit: {
-				password: true,
-			},
+				password: true
+			}
 		});
 		return users;
 	}
@@ -25,8 +26,8 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username,
-				},
+					username: username
+				}
 			});
 
 			return { content: null, status: 409 };
@@ -37,7 +38,7 @@ export class UserController {
 						data: {
 							name: name,
 							username: username,
-							password: password,
+							password: password
 						},
 						omit: {
 							password: true
@@ -48,6 +49,91 @@ export class UserController {
 				}
 			}
 		}
+
+		return { content: null, status: 418 };
+	}
+
+	public static async getUser(req: Request) {
+		const id: number = parseInt(req.params.id);
+
+		try {
+			const user = await db.user.findUnique({
+				where: {
+					id: id
+				},
+				omit: {
+					password: true
+				}
+			});
+
+			return { content: user, status: 200 };
+		} catch (err) {
+			if (err instanceof PrismaClientKnownRequestError) {
+				if (err.code == "P2025") {
+					return { content: null, status: 404 };
+				}
+			}
+		}
+
+		return { content: null, status: 418 };
+	}
+
+	public static async update(req: Request) {
+		const id: number = parseInt(req.params.id);
+		const name: string = req.body.name;
+		const username: string = req.body.username;
+		const password: string = await Encrypt.hashPassword(req.body.password);
+
+		try {
+			await db.user.update({
+				where: {
+					id: id
+				},
+				data: {
+					name: name,
+					username: username,
+					password: password
+				}
+			});
+
+			return 204;
+		} catch (err) {
+			if (err instanceof PrismaClientKnownRequestError) {
+				if (err.code == "P2025") {
+					return 404;
+				}
+			}
+		}
+
+		return 418;
+	}
+
+	public static async getBooks(req: Request) {
+		const id: number = parseInt(req.params.id);
+
+		try {
+			const user = await db.user.findUniqueOrThrow({
+				where: {
+					id: id
+				},
+				include: {
+					booksBorrowed: true
+				},
+				omit: {
+					password: true
+				}
+			});
+
+			return { content: user.booksBorrowed, status: 200 };
+		} catch (err) {
+			if (err instanceof PrismaClientKnownRequestError) {
+				if (err.code == "P2025") {
+					return { content: null, status: 404 };
+				}
+			}
+		}
+
+		return { content: null, status: 418 };
 	}
 
 	public static async login(req: Request) {
@@ -57,8 +143,8 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username,
-				},
+					username: username
+				}
 			});
 
 			if (await Encrypt.checkPassword(password, user.password)) {
@@ -74,61 +160,7 @@ export class UserController {
 				}
 			}
 		}
-	}
 
-	public static async getUser(req: Request) {
-		const id: number = parseInt(req.params.id);
-
-		const user = await db.user.findUniqueOrThrow({
-			where: {
-				id: id,
-			},
-			omit: {
-				password: true,
-			},
-		});
-
-		return user;
-	}
-
-	public static async getBooks(req: Request) {
-		const id: number = parseInt(req.params.id);
-
-		const user = await db.user.findUniqueOrThrow({
-			where: {
-				id: id,
-			},
-			include: {
-				booksBorrowed: true,
-			},
-			omit: {
-				password: true,
-			},
-		});
-
-		return user.booksBorrowed;
-	}
-
-	public static async updateDetails(req: Request) {
-		const id: number = parseInt(req.params.id);
-		const name = req.body.name;
-		const username = req.body.username;
-    const password = await Encrypt.hashPassword(req.body.password)
-
-		await db.user.update({
-			where: {
-				id: id,
-			},
-			data: {
-				name: name,
-				username: username,
-        password: password
-			},
-			omit: {
-				password: true,
-			},
-		});
-
-		return 204
+		return { content: null, status: 418 };
 	}
 }

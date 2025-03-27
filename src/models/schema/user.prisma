@@ -1,9 +1,15 @@
 model User {
-  id            Int       @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   name          String?
-  username      String    @unique
+  username      String   @unique
   password      String
+  role          Role     @default(User)
   booksBorrowed Borrow[]
 
   @@map("users")
+}
+
+enum Role {
+  User
+  Admin
 }

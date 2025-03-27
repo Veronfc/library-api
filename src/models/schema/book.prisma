@@ -1,11 +1,11 @@
 model Book {
-  id         Int       @id @default(autoincrement())
-  title      String    @unique
+  id         Int      @id @default(autoincrement())
+  title      String   @unique
   genre      Genre
   author     String
   publisher  String
   pages      Int
-  summary    String
+  synopsis   String
   count      Int
   borrowedBy Borrow[]
 
