@@ -18,7 +18,7 @@ type Token = {
 
 export class Auth {
 
-	public static async createToken(payload: any) {
+	public static async createToken(payload: any): Promise<string> {
     try {
       const token = jwt.sign(payload, secret, {
         expiresIn: "1m"
