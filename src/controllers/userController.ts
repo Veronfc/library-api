@@ -10,16 +10,16 @@ import { Auth } from "../auth/auth";
 const db = new PrismaClient();
 
 export class UserController {
-  //=REMOVE=WHEN=DONE=//
+	//=REMOVE=WHEN=DONE=//
 	public static async getUsers() {
 		const users = await db.user.findMany({
 			omit: {
-				password: true
-			}
+				password: true,
+			},
 		});
 		return users;
 	}
-  //==================//
+	//==================//
 
 	public static async register(req: Request) {
 		const name: string = req.body.name;
@@ -29,8 +29,8 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username
-				}
+					username: username,
+				},
 			});
 
 			return { content: null, token: "", status: 409 };
@@ -41,14 +41,14 @@ export class UserController {
 						data: {
 							name: name,
 							username: username,
-							password: password
+							password: password,
 						},
 						omit: {
-							password: true
-						}
+							password: true,
+						},
 					});
 
-          const token = await Auth.createToken(user)
+					const token = await Auth.createToken(user);
 
 					return { content: user, token: token, status: 201 };
 				}
@@ -64,11 +64,11 @@ export class UserController {
 		try {
 			const user = await db.user.findUnique({
 				where: {
-					id: id
+					id: id,
 				},
 				omit: {
-					password: true
-				}
+					password: true,
+				},
 			});
 
 			return { content: user, status: 200 };
@@ -92,13 +92,13 @@ export class UserController {
 		try {
 			await db.user.update({
 				where: {
-					id: id
+					id: id,
 				},
 				data: {
 					name: name,
 					username: username,
-					password: password
-				}
+					password: password,
+				},
 			});
 
 			return 204;
@@ -119,14 +119,14 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					id: id
+					id: id,
 				},
 				include: {
-					booksBorrowed: true
+					booksBorrowed: true,
 				},
 				omit: {
-					password: true
-				}
+					password: true,
+				},
 			});
 
 			return { content: user.booksBorrowed, status: 200 };
@@ -141,6 +141,55 @@ export class UserController {
 		return { content: null, status: 418 };
 	}
 
+	public static async borrow(req: Request) {
+		const userId: number = parseInt(req.params.userId)
+		const bookId: number = parseInt(req.params.bookId)
+
+		try {	
+			const book = await db.book.findUniqueOrThrow({
+				where: {
+					id: bookId
+				}
+			})
+
+			if (book.count >= 1) {
+				await db.borrow.create({
+					data: {
+						userId: userId,
+						bookId: bookId
+					}, 
+					include: {
+						user: true,
+						book: true
+					}
+				})
+
+				await db.book.update({
+					where: {
+						id: bookId,
+					},
+					data: {
+						count: {
+							decrement: 1
+						}
+					}
+				})
+
+				return 200
+			}
+			
+			return 412
+		} catch (err) {
+			if (err instanceof PrismaClientKnownRequestError) {
+				if (err.code = "P2025") {
+					return 404
+				}
+			}
+		}
+
+		return 500
+	}
+
 	public static async login(req: Request) {
 		const username: string = req.body.username;
 		const password: string = req.body.password;
@@ -148,14 +197,14 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username
-				}
+					username: username,
+				},
 			});
 
 			if (await Encrypt.checkPassword(password, user.password)) {
 				user.password = "";
 
-				const token = await Auth.createToken(user)
+				const token = await Auth.createToken(user);
 
 				return { content: user, token: token, status: 200 };
 			}

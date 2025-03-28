@@ -7,43 +7,63 @@ import jwt from "jsonwebtoken";
 const secret = process.env.JWT_SECRET || "SomeSuperSecretKey";
 
 type Token = {
-  id: number,
-  name: string,
-  username: string,
-  password: string,
-  role: Role,
-  iat: number,
-  exp: number
-}
+	id: number;
+	name: string;
+	username: string;
+	password: string;
+	role: Role;
+	iat: number;
+	exp: number;
+};
 
 export class Auth {
-
 	public static async createToken(payload: any): Promise<string> {
-    try {
-      const token = jwt.sign(payload, secret, {
-        expiresIn: "1m"
-      });
+		try {
+			const token = jwt.sign(payload, secret, {
+				expiresIn: "1m",
+			});
 
-      return token
+			return token;
 		} catch (err) {
-      return ""
-    }
+			return "";
+		}
 	}
 
-	public static checkToken = (req: Request, res: Response, next: NextFunction) => {
-    const id: number = parseInt(req.params.id)
+	public static checkToken = (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) => {
+		const id: number = parseInt(req.params.id);
 		const token = req.headers.authorization || "";
 
-    try {
-      const payload = jwt.verify(token, secret) as Token;
+		try {
+			const payload = jwt.verify(token, secret) as Token;
 
-      if (payload.id == id) {
-        next()
-      } else (
-        res.sendStatus(401)
-      )
-    } catch (err) {
-      res.sendStatus(401)
-    }
-	}
+			if (payload.id == id) {
+				next();
+			} else res.sendStatus(401);
+		} catch (err) {
+			res.sendStatus(403);
+		}
+	};
+
+	public static checkAdminToken = (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) => {
+		const id: number = parseInt(req.params.id);
+		const token = req.headers.authorization || "";
+
+		try {
+			const payload = jwt.verify(token, secret) as Token;
+
+			if (payload.id == id && payload.role == "Admin") {
+				next();
+			} else res.sendStatus(401);
+		} catch (err) {
+			res.sendStatus(403);
+		}
+	};
 }

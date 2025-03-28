@@ -15,6 +15,6 @@ export class Encrypt {
 		hash: string
 	): Promise<boolean> {
 		const result: boolean = await bcrypt.compare(password, hash);
-    return result
+		return result;
 	}
 }

@@ -3,14 +3,15 @@
 import express, { Request, Response } from "express";
 
 import { BookController } from "../controllers/bookController";
+import { Auth } from "../auth/auth";
 
 const router = express.Router();
 
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (res: Response) => {
 	res.send(await BookController.getBooks());
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", Auth.checkAdminToken, async (req: Request, res: Response) => {
 	res.sendStatus(await BookController.add(req));
 });
 
@@ -20,8 +21,12 @@ router.get("/:id", async (req: Request, res: Response) => {
 	res.status(result.status).send(result.content);
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
-	res.sendStatus(await BookController.update(req));
-});
+router.put(
+	"/:id",
+	Auth.checkAdminToken,
+	async (req: Request, res: Response) => {
+		res.sendStatus(await BookController.update(req));
+	}
+);
 
 module.exports = router;

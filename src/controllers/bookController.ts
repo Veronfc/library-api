@@ -1,6 +1,6 @@
 /** @format */
 
-import { Genre, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request } from "express";
 
@@ -15,7 +15,7 @@ export class BookController {
 
 	public static async add(req: Request) {
 		const title: string = req.body.title;
-		const genre: Genre = req.body.genre;
+		const genre: string = req.body.genre;
 		const author: string = req.body.author;
 		const publisher: string = req.body.publisher;
 		const pages: number = parseInt(req.body.pages as string);
@@ -25,8 +25,8 @@ export class BookController {
 		try {
 			const book = await db.book.findUniqueOrThrow({
 				where: {
-					title: title
-				}
+					title: title,
+				},
 			});
 
 			return 409;
@@ -41,8 +41,8 @@ export class BookController {
 							publisher: publisher,
 							pages: pages,
 							synopsis: synopsis,
-							count: count
-						}
+							count: count,
+						},
 					});
 
 					return 201;
@@ -59,8 +59,8 @@ export class BookController {
 		try {
 			const book = await db.book.findUniqueOrThrow({
 				where: {
-					id: id
-				}
+					id: id,
+				},
 			});
 
 			return { content: book, status: 200 };
@@ -78,7 +78,7 @@ export class BookController {
 	public static async update(req: Request) {
 		const id: number = parseInt(req.params.id);
 		const title: string = req.body.title;
-		const genre: Genre = req.body.genre;
+		const genre: string = req.body.genre;
 		const author: string = req.body.author;
 		const publisher: string = req.body.publisher;
 		const pages: number = parseInt(req.body.pages as string);
@@ -88,7 +88,7 @@ export class BookController {
 		try {
 			await db.book.update({
 				where: {
-					id: id
+					id: id,
 				},
 				data: {
 					title: title,
@@ -97,8 +97,8 @@ export class BookController {
 					publisher: publisher,
 					pages: pages,
 					synopsis: synopsis,
-					count: count
-				}
+					count: count,
+				},
 			});
 
 			return 204;

@@ -1,6 +1,6 @@
 /** @format */
 
-import express, { request, Request, response, Response } from "express";
+import express, { Request, Response } from "express";
 
 import { UserController } from "../controllers/userController";
 import { Auth } from "../auth/auth";
@@ -8,7 +8,7 @@ import { Auth } from "../auth/auth";
 const router = express.Router();
 
 //=REMOVE=WHEN=DONE=//
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (res: Response) => {
 	res.send(await UserController.getUsers());
 });
 //==================//
@@ -16,7 +16,10 @@ router.get("/", async (req: Request, res: Response) => {
 router.post("/", async (req: Request, res: Response) => {
 	const result = await UserController.register(req);
 
-	res.status(result.status).setHeader("Authorization", result.token).send(result.content);
+	res
+		.status(result.status)
+		.setHeader("Authorization", result.token)
+		.send(result.content);
 });
 
 router.get("/:id", Auth.checkToken, async (req: Request, res: Response) => {
@@ -29,16 +32,27 @@ router.put("/:id", Auth.checkToken, async (req: Request, res: Response) => {
 	res.sendStatus(await UserController.update(req));
 });
 
-router.get("/:id/books", Auth.checkToken, async (req: Request, res: Response) => {
-	const result = await UserController.getBooks(req);
+router.get(
+	"/:id/books",
+	Auth.checkToken,
+	async (req: Request, res: Response) => {
+		const result = await UserController.getBooks(req);
 
-	res.status(result.status).send(result.content);
-});
+		res.status(result.status).send(result.content);
+	}
+);
+
+router.post('/:userId/books/:bookId', Auth.checkToken, async (res: Response, req: Request) => {
+	res.sendStatus(await UserController.borrow(req))
+})
 
 router.post("/login", async (req: Request, res: Response) => {
 	const result = await UserController.login(req);
 
-	res.status(result.status).setHeader("Authorization", result.token).send(result.content);
+	res
+		.status(result.status)
+		.setHeader("Authorization", result.token)
+		.send(result.content);
 });
 
 module.exports = router;
