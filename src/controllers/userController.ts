@@ -3,13 +3,14 @@
 import { Request } from "express";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import jwt from "jsonwebtoken";
 
 import { Encrypt } from "../auth/encrypt";
+import { Auth } from "../auth/auth";
 
 const db = new PrismaClient();
 
 export class UserController {
+  //=REMOVE=WHEN=DONE=//
 	public static async getUsers() {
 		const users = await db.user.findMany({
 			omit: {
@@ -18,6 +19,7 @@ export class UserController {
 		});
 		return users;
 	}
+  //==================//
 
 	public static async register(req: Request) {
 		const name: string = req.body.name;
@@ -46,14 +48,7 @@ export class UserController {
 						}
 					});
 
-					const secret =
-						process.env.JWT_SECRET == undefined
-							? "SomeSuperSecretKey"
-							: process.env.JWT_SECRET;
-
-					const token = jwt.sign(user, secret, {
-						expiresIn: "1m"
-					});
+          const token = await Auth.createToken(user)
 
 					return { content: user, token: token, status: 201 };
 				}
@@ -160,14 +155,7 @@ export class UserController {
 			if (await Encrypt.checkPassword(password, user.password)) {
 				user.password = "";
 
-				const secret =
-					process.env.JWT_SECRET == undefined
-						? "SomeSuperSecretKey"
-						: process.env.JWT_SECRET;
-
-				const token = jwt.sign(user, secret, {
-					expiresIn: "1m"
-				});
+				const token = await Auth.createToken(user)
 
 				return { content: user, token: token, status: 200 };
 			}
@@ -182,20 +170,5 @@ export class UserController {
 		}
 
 		return { content: null, token: "", status: 418 };
-	}
-
-	public static async jwtTest(req: Request) {
-		const token = req.body.token;
-		const secret =
-			process.env.JWT_SECRET == undefined
-				? "SomeSuperSecretKey"
-				: process.env.JWT_SECRET;
-
-		const decoded =
-			jwt.verify(token, secret) == undefined || null
-				? "it no work"
-				: jwt.verify(token, secret);
-
-		return decoded;
 	}
 }
