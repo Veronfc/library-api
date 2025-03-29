@@ -20,7 +20,7 @@ export class Auth {
 	public static async createToken(payload: any): Promise<string> {
 		try {
 			const token = jwt.sign(payload, secret, {
-				expiresIn: "1m",
+				expiresIn: "5m"
 			});
 
 			return token;
@@ -53,13 +53,12 @@ export class Auth {
 		res: Response,
 		next: NextFunction
 	) => {
-		const id: number = parseInt(req.params.id);
 		const token = req.headers.authorization || "";
 
 		try {
 			const payload = jwt.verify(token, secret) as Token;
 
-			if (payload.id == id && payload.role == "Admin") {
+			if (payload.role == Role["Admin"]) {
 				next();
 			} else res.sendStatus(401);
 		} catch (err) {

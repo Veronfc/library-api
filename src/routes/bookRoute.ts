@@ -29,4 +29,12 @@ router.put(
 	}
 );
 
+router.delete(
+	"/:id",
+	Auth.checkAdminToken,
+	async (req: Request, res: Response) => {
+		res.sendStatus(await BookController.remove(req));
+	}
+);
+
 module.exports = router;

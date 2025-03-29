@@ -1,8 +1,8 @@
 model Borrow {
   userId     Int
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
   bookId     Int
-  book       Book     @relation(fields: [bookId], references: [id])
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   borrowedOn DateTime @default(now())
 
   @@id([userId, bookId])

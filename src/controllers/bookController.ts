@@ -25,8 +25,8 @@ export class BookController {
 		try {
 			const book = await db.book.findUniqueOrThrow({
 				where: {
-					title: title,
-				},
+					title: title
+				}
 			});
 
 			return 409;
@@ -41,8 +41,8 @@ export class BookController {
 							publisher: publisher,
 							pages: pages,
 							synopsis: synopsis,
-							count: count,
-						},
+							count: count
+						}
 					});
 
 					return 201;
@@ -59,8 +59,8 @@ export class BookController {
 		try {
 			const book = await db.book.findUniqueOrThrow({
 				where: {
-					id: id,
-				},
+					id: id
+				}
 			});
 
 			return { content: book, status: 200 };
@@ -88,7 +88,7 @@ export class BookController {
 		try {
 			await db.book.update({
 				where: {
-					id: id,
+					id: id
 				},
 				data: {
 					title: title,
@@ -97,11 +97,33 @@ export class BookController {
 					publisher: publisher,
 					pages: pages,
 					synopsis: synopsis,
-					count: count,
-				},
+					count: count
+				}
 			});
 
 			return 204;
+		} catch (err) {
+			if (err instanceof PrismaClientKnownRequestError) {
+				if (err.code == "P2025") {
+					return 404;
+				}
+			}
+		}
+
+		return 418;
+	}
+
+	public static async remove(req: Request) {
+		const id: number = parseInt(req.params.id);
+
+		try {
+			await db.book.delete({
+				where: {
+					id: id
+				}
+			});
+
+			return 200;
 		} catch (err) {
 			if (err instanceof PrismaClientKnownRequestError) {
 				if (err.code == "P2025") {

@@ -14,8 +14,8 @@ export class UserController {
 	public static async getUsers() {
 		const users = await db.user.findMany({
 			omit: {
-				password: true,
-			},
+				password: true
+			}
 		});
 		return users;
 	}
@@ -29,8 +29,8 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username,
-				},
+					username: username
+				}
 			});
 
 			return { content: null, token: "", status: 409 };
@@ -41,11 +41,11 @@ export class UserController {
 						data: {
 							name: name,
 							username: username,
-							password: password,
+							password: password
 						},
 						omit: {
-							password: true,
-						},
+							password: true
+						}
 					});
 
 					const token = await Auth.createToken(user);
@@ -64,11 +64,11 @@ export class UserController {
 		try {
 			const user = await db.user.findUnique({
 				where: {
-					id: id,
+					id: id
 				},
 				omit: {
-					password: true,
-				},
+					password: true
+				}
 			});
 
 			return { content: user, status: 200 };
@@ -92,13 +92,13 @@ export class UserController {
 		try {
 			await db.user.update({
 				where: {
-					id: id,
+					id: id
 				},
 				data: {
 					name: name,
 					username: username,
-					password: password,
-				},
+					password: password
+				}
 			});
 
 			return 204;
@@ -119,14 +119,30 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					id: id,
+					id: id
 				},
 				include: {
-					booksBorrowed: true,
+					booksBorrowed: {
+						include: {
+							book: {
+								omit: {
+									genre: true,
+									publisher: true,
+									pages: true,
+									synopsis: true,
+									count: true
+								}
+							}
+						},
+						omit: {
+							userId: true,
+							bookId: true
+						}
+					}
 				},
 				omit: {
-					password: true,
-				},
+					password: true
+				}
 			});
 
 			return { content: user.booksBorrowed, status: 200 };
@@ -142,52 +158,91 @@ export class UserController {
 	}
 
 	public static async borrow(req: Request) {
-		const userId: number = parseInt(req.params.userId)
-		const bookId: number = parseInt(req.params.bookId)
+		const userId: number = parseInt(req.params.id);
+		const bookId: number = parseInt(req.params.bookId);
 
-		try {	
+		try {
 			const book = await db.book.findUniqueOrThrow({
 				where: {
 					id: bookId
 				}
-			})
+			});
 
 			if (book.count >= 1) {
 				await db.borrow.create({
 					data: {
 						userId: userId,
 						bookId: bookId
-					}, 
+					},
 					include: {
 						user: true,
 						book: true
 					}
-				})
+				});
 
 				await db.book.update({
 					where: {
-						id: bookId,
+						id: bookId
 					},
 					data: {
 						count: {
 							decrement: 1
 						}
 					}
-				})
+				});
 
-				return 200
+				return 200;
 			}
-			
-			return 412
+
+			return 412;
 		} catch (err) {
 			if (err instanceof PrismaClientKnownRequestError) {
-				if (err.code = "P2025") {
-					return 404
+				if (err.code == "P2025") {
+					return 404;
+				} else if (err.code == "P2002") {
+					return 409;
 				}
 			}
 		}
 
-		return 500
+		return 418;
+	}
+
+	public static async return(req: Request) {
+		const userId: number = parseInt(req.params.id);
+		const bookId: number = parseInt(req.params.bookId);
+
+		try {
+			await db.borrow.delete({
+				where: {
+					userId_bookId: {
+						userId: userId,
+						bookId: bookId
+					}
+				}
+			});
+
+			await db.book.update({
+				where: {
+					id: bookId
+				},
+				data: {
+					count: {
+						increment: 1
+					}
+				}
+			});
+
+			return 200;
+		} catch (err) {
+			if (err instanceof PrismaClientKnownRequestError) {
+				if ((err.code = "P2025")) {
+					return 404;
+				}
+			}
+		}
+
+		return 418;
 	}
 
 	public static async login(req: Request) {
@@ -197,8 +252,8 @@ export class UserController {
 		try {
 			const user = await db.user.findUniqueOrThrow({
 				where: {
-					username: username,
-				},
+					username: username
+				}
 			});
 
 			if (await Encrypt.checkPassword(password, user.password)) {

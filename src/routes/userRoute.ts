@@ -42,9 +42,21 @@ router.get(
 	}
 );
 
-router.post('/:userId/books/:bookId', Auth.checkToken, async (res: Response, req: Request) => {
-	res.sendStatus(await UserController.borrow(req))
-})
+router.post(
+	"/:id/books/:bookId",
+	Auth.checkToken,
+	async (req: Request, res: Response) => {
+		res.sendStatus(await UserController.borrow(req));
+	}
+);
+
+router.delete(
+	"/:id/books/:bookId",
+	Auth.checkToken,
+	async (req: Request, res: Response) => {
+		res.sendStatus(await UserController.return(req));
+	}
+);
 
 router.post("/login", async (req: Request, res: Response) => {
 	const result = await UserController.login(req);
